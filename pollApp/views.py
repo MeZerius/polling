@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import RegistrationForm, LoginForm, OptionForm
@@ -95,5 +97,17 @@ def pollPage(request, poll_id):
             )
         )
     )
+
+    # Calculate remaining time and poll status
+    remaining_time = poll.created_at + poll.active_time - timezone.now()
+    if remaining_time.total_seconds() > 0:
+        remaining_time = str(timedelta(seconds=remaining_time.total_seconds()))
+        poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Active'
+    else:
+        remaining_time = "Poll has ended"
+        poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Expired'
+
+    end_time = poll.created_at + poll.active_time
+
     return render(request, 'pollPage.html',
-                  {'poll': poll, 'form': form, 'user_has_voted': user_has_voted, 'options': options})
+                  {'poll': poll, 'form': form, 'user_has_voted': user_has_voted, 'options': options, 'remaining_time': remaining_time, 'poll_status': poll_status, 'end_time': end_time})

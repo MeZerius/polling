@@ -9,7 +9,7 @@ admin.site.index_title = "Welcome to the Poll Admin Area"
 
 class OptionInline(admin.TabularInline):
     model = Option
-    extra = 2
+    extra = 0
 
 
 class PollAdmin(admin.ModelAdmin):

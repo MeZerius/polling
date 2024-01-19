@@ -9,17 +9,18 @@
     <div class="container mt-5">
         <h1 class="text-center mb-3">{{ poll.title }}</h1>
         <p>Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+        <p>Remaining time: <span id="countdown">Loading...</span></p>
+        <p>Status: {{ poll_status }}</p>
         <form method="post" class="mb-3">
             {% csrf_token %}
             {% for option in options %}
                 <div class="card mb-3">
-                    <div class="card-body">
+                    <div class="card-body checkbox-container">
                         <div class="pl-0">
 
                             {% if not poll.is_expired and request.user.is_authenticated and not user_has_voted %}
                                 <input class="form-check-input" type="radio" name="option" value="{{ option.id }}">
                                 <label class="form-check-label" for="{{ option.id }}">{{ option.text }}</label>
-{#                            {% endif %}#}
 
                             {% elif user_has_voted and option.user_has_voted_for_option %}
                             <div class="alert alert-primary mb-0">
@@ -41,10 +42,48 @@
                 </div>
             {% endfor %}
             {% if not poll.is_expired and request.user.is_authenticated and not user_has_voted %}
-            <div class="btn-group" role="group" aria-label="Vote Button">
-                <button type="submit" class="btn btn-primary">Vote</button>
-            </div>
+                <div class="btn-group" role="group" aria-label="Vote Button" style="float: right;">
+                    <button type="submit" class="btn btn-outline-primary">Vote</button>
+                </div>
             {% endif %}
         </form>
     </div>
+    <script>
+        function startCountdown(endTime, elementId) {
+            var countdown = setInterval(function() {
+                var now = new Date().getTime();
+                var distance = endTime - now;
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                var countdownText = "";
+                if (days > 0) countdownText += days + "d ";
+                if (hours > 0) countdownText += hours + "h ";
+                if (minutes > 0) countdownText += minutes + "m ";
+                if (seconds > 0) countdownText += seconds + "s ";
+                document.getElementById(elementId).innerHTML = countdownText;
+                if (distance < 0) {
+                    clearInterval(countdown);
+                    document.getElementById(elementId).innerHTML = "EXPIRED";
+                }
+            }, 1000);
+        }
+
+        var endTime = new Date("{{ end_time|date:"c" }}").getTime();
+        startCountdown(endTime, "countdown");
+    </script>
+    <script>
+    var containers = document.getElementsByClassName('checkbox-container');
+    for (var i = 0; i < containers.length; i++) {
+        containers[i].addEventListener('click', function(e) {
+            var checkbox = this.querySelector('input[type="radio"]');
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+                e.preventDefault();
+            }
+        });
+    }
+</script>
 {% endblock %}
+
