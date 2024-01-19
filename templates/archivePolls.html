@@ -9,17 +9,21 @@
         <h1 class="text-center mb-3">Archived Polls</h1>
 
         <div class="row">
-            {% for poll in polls %}
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ poll.title }}</h5>
-                            <p class="card-text">Status: {{ poll.status }}</p>
-                            <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+
+                {% for poll in polls %}
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <a href="{% url 'pollPage' poll.id %}" class="stretched-link text-decoration-none">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ poll.title }}</h5>
+                                    <p class="card-text">Status: {{ poll.status }}</p>
+                                    <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+                                </div>
+                            </a>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+
                 <div class="d-flex justify-content-center">
                     <nav aria-label="Page navigation">
                         <ul class="pagination">

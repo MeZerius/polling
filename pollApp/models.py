@@ -22,6 +22,9 @@ class Poll(models.Model):
         total_votes = sum(option.votes.count() for option in self.options.all())
         return total_votes < self.quorum
 
+    def has_user_voted(self, user):
+        return self.options.filter(votes=user).exists()
+
     def clean(self):
         if self.quorum < 2:
             raise ValidationError('Quorum cannot be less than 2.')

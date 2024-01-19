@@ -1,0 +1,50 @@
+{% extends "bases/base.html" %}
+{% load poll_extras %}
+
+{% block title %}
+    Poll Detail
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-3">{{ poll.title }}</h1>
+        <p>Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            {% for option in options %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="pl-0">
+
+                            {% if not poll.is_expired and request.user.is_authenticated and not user_has_voted %}
+                                <input class="form-check-input" type="radio" name="option" value="{{ option.id }}">
+                                <label class="form-check-label" for="{{ option.id }}">{{ option.text }}</label>
+{#                            {% endif %}#}
+
+                            {% elif user_has_voted and option.user_has_voted_for_option %}
+                            <div class="alert alert-primary mb-0">
+                                <label class="form-check-label" for="{{ option.id }}">{{ option.text }} </label>
+                                <span class="badge bg-info">Your Choice</span>
+                            </div>
+                            {% else %}
+                                <label class="form-check-label mb-0" for="{{ option.id }}">{{ option.text }}</label>
+                            {% endif %}
+
+                            {% if poll.is_expired %}
+                            <div class="progress mt-2">
+                                <div class="progress-bar" role="progressbar" style="width: {{ option.votes.count|percentage:poll.total_votes }}%;" aria-valuenow="{{ option.votes.count|percentage:poll.total_votes }}" aria-valuemin="0" aria-valuemax="100">{{ option.votes.count|percentage:poll.total_votes }}%</div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            {% if not poll.is_expired and request.user.is_authenticated and not user_has_voted %}
+            <div class="btn-group" role="group" aria-label="Vote Button">
+                <button type="submit" class="btn btn-primary">Vote</button>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

@@ -12,6 +12,8 @@ urlpatterns = [
     path('register/', pollApp.views.register, name='register'),
     path('polls/active/', pollApp.views.activePolls, name='activePolls'),
     path('polls/archive/', pollApp.views.archivedPolls, name='archivedPolls'),
+    path('polls/<int:poll_id>/', pollApp.views.pollPage, name='pollPage'),
+
     path('logout/', LogoutView.as_view(next_page='index'), name='logout'),
 
 ]

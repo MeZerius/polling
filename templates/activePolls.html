@@ -9,14 +9,15 @@
         <h1 class="text-center mb-3">Active Polls</h1>
         <div class="row">
             {% for poll in polls %}
-
                 <div class="col-md-4">
                     <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ poll.title }}</h5>
-                            <p class="card-text">Time left: <span id="timeLeft{{ poll.id }}">Loading...</span></p>
-                            <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
-                        </div>
+                        <a href="{% url 'pollPage' poll.id %}" class="stretched-link text-decoration-none">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ poll.title }}</h5>
+                                <p class="card-text">Time left: <span id="timeLeft{{ poll.id }}">Loading...</span></p>
+                                <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
             {% endfor %}

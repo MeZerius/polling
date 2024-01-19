@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import ModelForm, TextInput, NumberInput, PasswordInput
 
+from pollApp.models import Option
+
 
 class RegistrationForm(UserCreationForm):
     username = forms.CharField(max_length=30, label='Username', widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -20,3 +22,10 @@ class RegistrationForm(UserCreationForm):
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=30, label='Username', widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+
+class OptionForm(forms.ModelForm):
+    class Meta:
+        model = Option
+        fields = ['id']
+        widgets = {'id': forms.RadioSelect}
