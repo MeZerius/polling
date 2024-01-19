@@ -1,0 +1,33 @@
+{% extends "bases/base_authentication.html" %}
+
+{% block title %}
+    Registration
+{% endblock %}
+
+{% block content %}
+
+  <h3 class="card-header">Registration</h3>
+  <div class="card-body">
+    <form method="post">
+        {% csrf_token %}
+        <div class="mt-3">
+            {% for field in form %}
+                <div class="form-group mb-3">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+    </form>
+  </div>
+
+{% endblock %}
