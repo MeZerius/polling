@@ -1,13 +1,97 @@
 {% extends "bases/base.html" %}
 
 {% block title %}
-    Welcome Page
+    Active Polls
 {% endblock %}
 
 {% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-3">Active Polls</h1>
+        <div class="row">
+            {% for poll in polls %}
 
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ poll.title }}</h5>
+                            <p class="card-text">Time left: <span id="timeLeft{{ poll.id }}">Loading...</span></p>
+                            <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        <div class="d-flex justify-content-center">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        {% if polls.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" aria-label="First">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ polls.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&lsaquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
 
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                Page {{ polls.number }} of {{ polls.paginator.num_pages }}.
+                            </span>
+                        </li>
 
+                        {% if polls.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ polls.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&rsaquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ polls.paginator.num_pages }}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        {% for poll in polls %}
+            var countDownDate{{ poll.id }} = new Date("{{ poll.end_time|date:"c" }}").getTime();
+            var x{{ poll.id }} = setInterval(function() {
+                var now = new Date().getTime();
+                var distance = countDownDate{{ poll.id }} - now;
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
+                var timeLeft = "";
+                if (days > 0) {
+                    timeLeft += days + "d ";
+                }
+                if (hours > 0) {
+                    timeLeft += hours + "h ";
+                }
+                if (minutes > 0) {
+                    timeLeft += minutes + "m ";
+                }
+                if (seconds > 0) {
+                    timeLeft += seconds + "s ";
+                }
+
+                document.getElementById("timeLeft{{ poll.id }}").innerHTML = timeLeft;
+
+                if (distance < 0) {
+                    clearInterval(x{{ poll.id }});
+                    document.getElementById("timeLeft{{ poll.id }}").innerHTML = "EXPIRED";
+                }
+            }, 1000);
+        {% endfor %}
+    </script>
 {% endblock %}
