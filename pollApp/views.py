@@ -53,10 +53,19 @@ def register(request):
 
 def activePolls(request):
     now = timezone.now()
-    polls = [poll for poll in Poll.objects.all() if not poll.is_expired]
+    polls = [poll for poll in Poll.objects.all() if
+             (poll.start_time is None or poll.start_time <= now) and
+             (poll.end_time is None or poll.end_time > now) and
+             not poll.is_expired]
     for poll in polls:
         poll.total_votes = sum(option.votes.count() for option in poll.options.all())
-        poll.end_time = poll.created_at + poll.active_time
+
+        if poll.end_time is None:
+            if poll.active_time is not None:
+                if poll.start_time is not None:
+                    poll.end_time = poll.start_time + poll.active_time
+                else:
+                    poll.end_time = poll.created_at + poll.active_time
 
     paginator = Paginator(polls, 9)
     page_number = request.GET.get('page')
@@ -66,7 +75,11 @@ def activePolls(request):
 
 def archivedPolls(request):
     now = timezone.now()
-    polls = [poll for poll in Poll.objects.all() if poll.is_expired]
+    polls = [poll for poll in Poll.objects.all() if
+             poll.is_expired or
+             (
+                     poll.start_time is not None and poll.active_time is not None and poll.start_time + poll.active_time < now) or
+             (poll.end_time is not None and poll.end_time < now)]
     for poll in polls:
         poll.total_votes = sum(option.votes.all().count() for option in poll.options.all())
         poll.status = "Quorum isn't achieved" if poll.is_invalid else 'Expired'
@@ -74,13 +87,23 @@ def archivedPolls(request):
     paginator = Paginator(polls, 9)
     page_number = request.GET.get('page')
     polls = paginator.get_page(page_number)
-    return render(request, 'archivePolls.html', {'polls': polls})
+    return render(request, 'archivePolls.html', {'polls': polls}, )
+
+
+def upcomingPolls(request):
+    polls = [poll for poll in Poll.objects.all() if poll.start_time is not None and poll.start_time > timezone.now()]
+
+    paginator = Paginator(polls, 9)
+    page_number = request.GET.get('page')
+    polls = paginator.get_page(page_number)
+
+    return render(request, 'upcomingPolls.html', {'polls': polls})
 
 
 def pollPage(request, poll_id):
     poll = get_object_or_404(Poll, id=poll_id)
     poll.total_votes = sum(option.votes.count() for option in poll.options.all())
-    form = OptionForm()  # Define form before the if condition
+    form = OptionForm()
     user_has_voted = poll.has_user_voted(request.user) if request.user.is_authenticated else False
     if request.method == 'POST':
         option_id = request.POST.get('option')
@@ -98,16 +121,30 @@ def pollPage(request, poll_id):
         )
     )
 
-    # Calculate remaining time and poll status
-    remaining_time = poll.created_at + poll.active_time - timezone.now()
-    if remaining_time.total_seconds() > 0:
-        remaining_time = str(timedelta(seconds=remaining_time.total_seconds()))
-        poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Active'
-    else:
-        remaining_time = "Poll has ended"
-        poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Expired'
+    now = timezone.now()
+    end_time = None
 
-    end_time = poll.created_at + poll.active_time
+    if poll.end_time is None:
+        if poll.active_time is not None:
+            if poll.start_time is not None:
+                end_time = poll.start_time + poll.active_time
+            else:
+                end_time = poll.created_at + poll.active_time
+    else:
+        end_time = poll.end_time
+
+    if poll.start_time is not None and poll.start_time > now:
+        poll_status = "Upcoming"
+        remaining_time = "Starts at: " + str(poll.start_time)
+    else:
+        remaining_time = end_time - now
+        if remaining_time.total_seconds() > 0:
+            remaining_time = str(timedelta(seconds=remaining_time.total_seconds()))
+            poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Active'
+        else:
+            remaining_time = "Poll has ended"
+            poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Expired'
 
     return render(request, 'pollPage.html',
-                  {'poll': poll, 'form': form, 'user_has_voted': user_has_voted, 'options': options, 'remaining_time': remaining_time, 'poll_status': poll_status, 'end_time': end_time})
+                  {'poll': poll, 'form': form, 'user_has_voted': user_has_voted, 'options': options,
+                   'remaining_time': remaining_time, 'poll_status': poll_status, 'end_time': end_time})

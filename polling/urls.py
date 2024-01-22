@@ -1,6 +1,8 @@
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
+from django.conf import settings
 
 import pollApp.views
 
@@ -13,7 +15,8 @@ urlpatterns = [
     path('polls/active/', pollApp.views.activePolls, name='activePolls'),
     path('polls/archive/', pollApp.views.archivedPolls, name='archivedPolls'),
     path('polls/<int:poll_id>/', pollApp.views.pollPage, name='pollPage'),
+    path('polls/upcoming/', pollApp.views.upcomingPolls, name='upcomingPolls'),
 
     path('logout/', LogoutView.as_view(next_page='index'), name='logout'),
 
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
