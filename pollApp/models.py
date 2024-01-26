@@ -8,6 +8,7 @@ class Poll(models.Model):
     QUORUM_TYPE_CHOICES = [
         ('P', 'Percent'),
         ('N', 'Number'),
+        ('D', 'Disabled'),
     ]
     TIME_OPTION_CHOICES = [
         ('A', 'Active Time'),
@@ -21,7 +22,7 @@ class Poll(models.Model):
 
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
-    quorum = models.IntegerField()
+    quorum = models.IntegerField(null=True, blank=True)
     quorum_type = models.CharField(max_length=1, choices=QUORUM_TYPE_CHOICES, default='N')
     active_time = models.DurationField(help_text="Enter the active time for the poll in the format: DD HH:MM:SS.", null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -33,6 +34,8 @@ class Poll(models.Model):
 
     @property
     def quorum_number(self):
+        if self.quorum is None:
+            return None
         if self.quorum_type == 'P':
             return int(User.objects.count() * self.quorum / 100)
         else:
@@ -44,12 +47,14 @@ class Poll(models.Model):
             return timezone.now() > self.end_time
         elif self.start_time and self.active_time:
             return timezone.now() > self.start_time + self.active_time
+        elif self.active_time:
+            return timezone.now() > self.created_at + self.active_time
         else:
             return False
 
     @property
     def is_invalid(self):
-        if not self.is_expired:
+        if not self.is_expired or self.quorum is None:
             return None
         total_votes = sum(option.votes.count() for option in self.options.all())
         if self.quorum_type == 'P':
@@ -61,15 +66,21 @@ class Poll(models.Model):
         return self.options.filter(votes=user).exists()
 
     def clean(self):
-        if self.title is None or self.quorum_type is None or self.quorum is None:
-            raise ValidationError('Title, Quorum Type and Quorum fields must be filled out')
+        if  self.quorum_type == 'D' and self.quorum is not None:
+            raise ValidationError('Quorum must be empty when Quorum Type is set to Disabled')
+        if self.quorum_type != 'D' and self.quorum is None:
+            raise ValidationError('Quorum must be filled out when Quorum Type is not set to Disabled')
 
-        if self.quorum_type == 'P':
-            if not 0 <= self.quorum <= 100:
-                raise ValidationError('Quorum percent should be between 0 and 100.')
-        else:
-            if self.quorum < 2:
-                raise ValidationError('Quorum cannot be less than 2.')
+        if self.title is None or self.quorum_type is None:
+            raise ValidationError('Title and Quorum Type fields must be filled out')
+
+        if self.quorum is not None:
+            if self.quorum_type == 'P':
+                if not 0 <= self.quorum <= 100:
+                    raise ValidationError('Quorum must be between 0 and 100 when Quorum Type is set to Percent')
+            else:
+                if self.quorum < 2:
+                    raise ValidationError('Quorum must be greater than or equal to 2 when Quorum Type is set to Number')
 
         if self.time_option == 'A':
             if self.active_time is None:

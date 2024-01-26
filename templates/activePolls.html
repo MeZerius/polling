@@ -15,7 +15,11 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ poll.title }}</h5>
                                 <p class="card-text">Time left: <span id="timeLeft{{ poll.id }}">Loading...</span></p>
-                                <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum }}</p>
+                                <p class="card-text">Total votes: {{ poll.total_votes }}
+                                {% if poll.quorum_number != None %}
+                                     / {{ poll.quorum }}
+                                {% endif %}
+                                </p>
                             </div>
                         </a>
                     </div>

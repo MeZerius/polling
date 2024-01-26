@@ -17,7 +17,11 @@
                                 <div class="card-body">
                                     <h5 class="card-title">{{ poll.title }}</h5>
                                     <p class="card-text">Status: {{ poll.status }}</p>
-                                    <p class="card-text">Total votes: {{ poll.total_votes }} / {{ poll.quorum_number }}</p>
+                                    <p class="card-text">Total votes: {{ poll.total_votes }}
+                                        {% if poll.quorum_number != None %}
+                                             / {{ poll.quorum_number }}
+                                        {% endif %}
+                                    </p>
                                 </div>
                             </a>
                         </div>

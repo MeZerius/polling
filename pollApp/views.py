@@ -59,13 +59,13 @@ def activePolls(request):
              not poll.is_expired]
     for poll in polls:
         poll.total_votes = sum(option.votes.count() for option in poll.options.all())
-
-        if poll.end_time is None:
-            if poll.active_time is not None:
-                if poll.start_time is not None:
-                    poll.end_time = poll.start_time + poll.active_time
-                else:
-                    poll.end_time = poll.created_at + poll.active_time
+        if poll.quorum is not None:
+            if poll.end_time is None:
+                if poll.active_time is not None:
+                    if poll.start_time is not None:
+                        poll.end_time = poll.start_time + poll.active_time
+                    else:
+                        poll.end_time = poll.created_at + poll.active_time
 
     paginator = Paginator(polls, 9)
     page_number = request.GET.get('page')
@@ -76,13 +76,18 @@ def activePolls(request):
 def archivedPolls(request):
     now = timezone.now()
     polls = [poll for poll in Poll.objects.all() if
-             poll.is_expired or
-             (
-                     poll.start_time is not None and poll.active_time is not None and poll.start_time + poll.active_time < now) or
-             (poll.end_time is not None and poll.end_time < now)]
+             poll.is_expired]
+
     for poll in polls:
         poll.total_votes = sum(option.votes.all().count() for option in poll.options.all())
-        poll.status = "Quorum isn't achieved" if poll.is_invalid else 'Expired'
+        poll.display_quorum_number = poll.quorum_number if poll.quorum is not None else poll.total_votes
+        if poll.quorum is not None:
+            if poll.is_invalid:
+                poll.status = "Quorum isn't achieved"
+            else:
+                poll.status = 'EXPIRED'
+        elif poll.quorum is None:
+            poll.status = 'EXPIRED'
 
     paginator = Paginator(polls, 9)
     page_number = request.GET.get('page')
@@ -91,7 +96,8 @@ def archivedPolls(request):
 
 
 def upcomingPolls(request):
-    polls = [poll for poll in Poll.objects.all() if poll.start_time is not None and poll.start_time > timezone.now()]
+    polls = [poll for poll in Poll.objects.all() if
+             poll.start_time is not None and poll.start_time > timezone.now()]
 
     paginator = Paginator(polls, 9)
     page_number = request.GET.get('page')
@@ -107,9 +113,12 @@ def pollPage(request, poll_id):
     user_has_voted = poll.has_user_voted(request.user) if request.user.is_authenticated else False
     if request.method == 'POST':
         option_id = request.POST.get('option')
-        option = poll.options.get(id=option_id)
-        if not poll.is_expired and not user_has_voted:
-            option.votes.add(request.user)
+        new_option = poll.options.get(id=option_id)
+        if not poll.is_expired:
+            if user_has_voted:
+                old_option = poll.options.get(votes=request.user)
+                old_option.votes.remove(request.user)
+            new_option.votes.add(request.user)
             return redirect('pollPage', poll_id=poll.id)
 
     options = poll.options.all().annotate(
@@ -140,10 +149,16 @@ def pollPage(request, poll_id):
         remaining_time = end_time - now
         if remaining_time.total_seconds() > 0:
             remaining_time = str(timedelta(seconds=remaining_time.total_seconds()))
-            poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Active'
+            poll_status = 'Active'
         else:
             remaining_time = "Poll has ended"
-            poll_status = "Quorum isn't achieved" if poll.is_invalid else 'Expired'
+            if poll.quorum is not None:
+                if poll.is_invalid:
+                    poll_status = "Quorum isn't achieved"
+                else:
+                    poll_status = 'EXPIRED'
+            elif poll.quorum is None:
+                poll_status = 'EXPIRED'
 
     return render(request, 'pollPage.html',
                   {'poll': poll, 'form': form, 'user_has_voted': user_has_voted, 'options': options,

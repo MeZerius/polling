@@ -8,19 +8,25 @@
     <div class="container mt-5">
         <h1 class="text-center mb-3">Upcoming Polls</h1>
         <div class="row">
-            {% for poll in polls %}
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <a href="{% url 'pollPage' poll.id %}" class="stretched-link text-decoration-none">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ poll.title }}</h5>
-                                <p class="card-text">Time to start: <span id="timeLeft{{ poll.id }}">Loading...</span></p>
-                                <p class="card-text">Quorum: {{ poll.quorum_number }}</p>
-                            </div>
-                        </a>
-                    </div>
+        {% for poll in polls %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <a href="{% url 'pollPage' poll.id %}" class="stretched-link text-decoration-none">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ poll.title }}</h5>
+                            <p class="card-text">Time to start: <span id="timeLeft{{ poll.id }}">Loading...</span></p>
+                            <p class="card-text">Quorum:
+                                {% if poll.quorum_number is not None %}
+                                    {{ poll.quorum_number }}
+                                {% else %}
+                                    No quorum
+                                {% endif %}
+                            </p>
+                        </div>
+                    </a>
                 </div>
-            {% endfor %}
+            </div>
+        {% endfor %}
         <div class="d-flex justify-content-center">
                 <nav aria-label="Page navigation">
                     <ul class="pagination">
