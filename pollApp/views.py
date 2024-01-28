@@ -59,13 +59,13 @@ def activePolls(request):
              not poll.is_expired]
     for poll in polls:
         poll.total_votes = sum(option.votes.count() for option in poll.options.all())
-        if poll.quorum is not None:
-            if poll.end_time is None:
-                if poll.active_time is not None:
-                    if poll.start_time is not None:
-                        poll.end_time = poll.start_time + poll.active_time
-                    else:
-                        poll.end_time = poll.created_at + poll.active_time
+
+        if poll.end_time is None:
+            if poll.active_time is not None:
+                if poll.start_time is not None:
+                    poll.end_time = poll.start_time + poll.active_time
+                else:
+                    poll.end_time = poll.created_at + poll.active_time
 
     paginator = Paginator(polls, 9)
     page_number = request.GET.get('page')

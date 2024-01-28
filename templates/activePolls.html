@@ -65,38 +65,31 @@
         </div>
     </div>
 
-    <script>
-        {% for poll in polls %}
-            var countDownDate{{ poll.id }} = new Date("{{ poll.end_time|date:"c" }}").getTime();
-            var x{{ poll.id }} = setInterval(function() {
-                var now = new Date().getTime();
-                var distance = countDownDate{{ poll.id }} - now;
-                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+<script>
+    function startCountdown(endTime, elementId) {
+        var countdown = setInterval(function() {
+            var now = new Date().getTime();
+            var distance = endTime - now;
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            var countdownText = "";
+            if (days > 0) countdownText += days + "d ";
+            if (hours > 0) countdownText += hours + "h ";
+            if (minutes > 0) countdownText += minutes + "m ";
+            if (seconds > 0) countdownText += seconds + "s ";
+            document.getElementById(elementId).innerHTML = countdownText;
+            if (distance < 0) {
+                clearInterval(countdown);
+                document.getElementById(elementId).innerHTML = "EXPIRED";
+            }
+        }, 1000);
+    }
 
-                var timeLeft = "";
-                if (days > 0) {
-                    timeLeft += days + "d ";
-                }
-                if (hours > 0) {
-                    timeLeft += hours + "h ";
-                }
-                if (minutes > 0) {
-                    timeLeft += minutes + "m ";
-                }
-                if (seconds > 0) {
-                    timeLeft += seconds + "s ";
-                }
-
-                document.getElementById("timeLeft{{ poll.id }}").innerHTML = timeLeft;
-
-                if (distance < 0) {
-                    clearInterval(x{{ poll.id }});
-                    document.getElementById("timeLeft{{ poll.id }}").innerHTML = "EXPIRED";
-                }
-            }, 1000);
-        {% endfor %}
-    </script>
+    {% for poll in polls %}
+        var endTime{{ poll.id }} = new Date("{{ poll.end_time|date:"c" }}").getTime();
+        startCountdown(endTime{{ poll.id }}, "timeLeft{{ poll.id }}");
+    {% endfor %}
+</script>
 {% endblock %}
