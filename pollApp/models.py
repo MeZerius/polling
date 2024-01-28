@@ -21,7 +21,9 @@ class Poll(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='polls')
     title = models.CharField(max_length=200)
+    majority = models.BooleanField(default=False)
     quorum = models.IntegerField(null=True, blank=True)
     quorum_type = models.CharField(max_length=1, choices=QUORUM_TYPE_CHOICES, default='N')
     active_time = models.DurationField(help_text="Enter the active time for the poll in the format: DD HH:MM:SS.", null=True, blank=True)

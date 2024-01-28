@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var startTimeFieldTime = document.querySelector('input[name="start_time_1"]');
     var endTimeFieldDate = document.querySelector('input[name="end_time_0"]');
     var endTimeFieldTime = document.querySelector('input[name="end_time_1"]');
+    var quorumTypeField = document.querySelector('select[name="quorum_type"]');
+    var quorumField = document.querySelector('input[name="quorum"]');
 
     var handleTimeOptionChange = function(isPageLoad) {
         switch (timeOptionField.value) {
@@ -57,14 +59,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    var handleQuorumTypeChange = function(isPageLoad) {
+        switch (quorumTypeField.value) {
+            case 'D':
+                quorumField.parentElement.parentElement.style.display = 'none';
+
+                if (!isPageLoad) {
+                    quorumField.value = '';
+                }
+                break;
+            default:
+                quorumField.parentElement.parentElement.style.display = '';
+
+                if (!isPageLoad) {
+                    quorumField.value = '';
+                }
+                break;
+        }
+    };
+
     timeOptionField.onchange = function() {
         handleTimeOptionChange(false);
     };
-
     startOptionField.onchange = function() {
         handleStartOptionChange(false);
+    };
+    quorumTypeField.onchange = function() {
+        handleQuorumTypeChange(false);
     };
 
     handleTimeOptionChange(true);
     handleStartOptionChange(true);
+    handleQuorumTypeChange(true);
 });
