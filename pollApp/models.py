@@ -21,7 +21,7 @@ class Poll(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='polls')
+    creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='polls')
     title = models.CharField(max_length=200)
     majority = models.BooleanField(default=False)
     quorum = models.IntegerField(null=True, blank=True)
